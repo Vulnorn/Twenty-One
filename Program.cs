@@ -91,6 +91,8 @@ namespace TwentyOne
             int twoThirdHalfDeck = (halfDesk - oneThirdHalfDeck) / 2;
             int thirdPartHalfDeck = halfDesk - twoThirdHalfDeck - oneThirdHalfDeck;
 
+            for(int i )
+
         }
 
 
