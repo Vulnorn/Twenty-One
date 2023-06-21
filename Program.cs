@@ -86,12 +86,14 @@ namespace TwentyOne
 
         public void ShufflingDeskDividedIntoFourParts(Card card)
         {
+            List<Card>_mixedCards = new List<Card>();
             int halfDesk = _cards.Count/2 ;
             int oneThirdHalfDeck = halfDesk/ 3;
             int twoThirdHalfDeck = (halfDesk - oneThirdHalfDeck) / 2;
             int thirdPartHalfDeck = halfDesk - twoThirdHalfDeck - oneThirdHalfDeck;
 
-            for(int i )
+            _mixedCards.AddRange(_cards.GetRange(oneThirdHalfDeck, twoThirdHalfDeck));
+
 
         }
 
