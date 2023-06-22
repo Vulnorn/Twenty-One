@@ -11,23 +11,60 @@ namespace TwentyOne
     {
         static void Main(string[] args)
         {
-            DeskCards deskCards = new DeskCards();
-            Card card = new Card(null,null);
 
-            deskCards.CreateCard();
-            deskCards.ShowAllCards();
-            deskCards.ShufflingDeskFisherYates(card);
-            Console.WriteLine(" ");
-            deskCards.ShowAllCards();
-            Console.ReadKey();
+            Console.WriteLine($"Игра 21 очко. игрок против крупье.");
+            //Console.WriteLine($"Играется колодой из {deskCards._cards.Count}") ;
         }
+    }
+
+    class Game
+    {
+        public Croupier Croupier;
+
+
+        public void TakeTwoCards()
+        {
+            Croupier
+        }
+    }
+
+    class Croupier
+    {
+        private DeskCards _deskCards = new DeskCards();
+
+        public bool GiveOutCards(out Card cards)
+        {
+            cards = null;
+
+            if (_deskCards.DealOneCards(out Card card))
+            {
+                
+                return true;
+            }
+            else
+            {
+                Console.WriteLine($"В колоде не осталось карт.");
+                Console.ReadKey();
+                return false;
+            }
+        }
+
+    }
+
+    class Player
+    {
+        private List<Card> _gameHand = new List<Card>();
+
+
+
     }
 
     class DeskCards
     {
         private List<Card> _cards = new List<Card>();
+        private Stack<Card> _DeskCards = new Stack<Card>();
 
-        public void CreateCard()
+        public DeskCards()
         {
             const int CountDiamondsSuits = 0;
             const int CountHeartsSuits = 1;
@@ -44,6 +81,7 @@ namespace TwentyOne
             using (StreamReader reader = new StreamReader(meaningCards))
             {
                 string ranks;
+
                 while ((ranks = reader.ReadLine()) != null)
                 {
                     for (int i = 0; i < countSuits; i++)
@@ -69,49 +107,63 @@ namespace TwentyOne
                     }
                 }
             }
+
+            ShufflingDeskFisherYates();
+            ShufflingDeskDividedIntoFourParts();
+            ShufflingDeskFisherYates();
+            CreateDesk();
         }
 
-        public void ShufflingDeskFisherYates(Card card)
+        private void ShufflingDeskFisherYates()
         {
-            Random random = new Random() ;
+            Card card = null;
+            Random random = new Random();
 
             for (int i = _cards.Count - 1; i > 0; --i)
             {
                 int j = random.Next(i + 1);
-                card  = _cards[i];
+                card = _cards[i];
                 _cards[i] = _cards[j];
                 _cards[j] = card;
             }
         }
 
-        public void ShufflingDeskDividedIntoFourParts(Card card)
+        private void ShufflingDeskDividedIntoFourParts()
         {
-            List<Card>_mixedCards = new List<Card>();
-            int halfDesk = _cards.Count/2 ;
-            int oneThirdHalfDeck = halfDesk/ 3;
-            int twoThirdHalfDeck = (halfDesk - oneThirdHalfDeck) / 2;
-            int thirdPartHalfDeck = halfDesk - twoThirdHalfDeck - oneThirdHalfDeck;
+            List<Card> _mixedCards = new List<Card>();
 
-            _mixedCards.AddRange(_cards.GetRange(oneThirdHalfDeck, twoThirdHalfDeck));
+            int halfDesk = _cards.Count / 2;
+            int oneThirdHalfDeck = halfDesk / 3;
+            int twoThirdHalfDeck = halfDesk * 2 / 3;
 
+            _mixedCards.AddRange(_cards.GetRange(oneThirdHalfDeck, twoThirdHalfDeck - oneThirdHalfDeck));
+            _mixedCards.AddRange(_cards.GetRange(halfDesk, halfDesk));
+            _mixedCards.AddRange(_cards.GetRange(0, oneThirdHalfDeck));
+            _mixedCards.AddRange(_cards.GetRange(twoThirdHalfDeck, halfDesk - twoThirdHalfDeck));
 
+            _cards = _mixedCards;
         }
 
-
-        public void ShowAllCards()
+        private void CreateDesk()
         {
-
-            for (int i = 0; i < _cards.Count; i++)
+            foreach (Card element in _cards)
             {
-                _cards[i].ShowInfo();
+                _DeskCards.Push(element);
             }
         }
 
-    }
+        public bool DealOneCards(out Card card)
+        {
+            card = null;
 
-    class Croupier
-    {
+            if (_DeskCards.Count > 0)
+            {
+                card = _DeskCards.Pop();
+                return true;
+            }
 
+            return false;
+        }
     }
 
     class Card
