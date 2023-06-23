@@ -19,12 +19,19 @@ namespace TwentyOne
 
     class Game
     {
-        public Croupier Croupier;
+        public Croupier Croupier = new Croupier();
+        public Player Player = new Player();
 
 
         public void TakeTwoCards()
         {
             Croupier
+        }
+
+        private void InputPlayerName()
+        {
+            Console.WriteLine($"Введите имя Игрока.");
+            string name = Console.ReadLine();
         }
     }
 
@@ -38,7 +45,7 @@ namespace TwentyOne
 
             if (_deskCards.DealOneCards(out Card card))
             {
-                
+
                 return true;
             }
             else
@@ -54,6 +61,13 @@ namespace TwentyOne
     class Player
     {
         private List<Card> _gameHand = new List<Card>();
+
+        public Player(string name)
+        {
+            Name = name;
+        }
+
+        public string Name { get; private set; }
 
 
 
