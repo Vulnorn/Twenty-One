@@ -11,39 +11,40 @@ namespace TwentyOne
     {
         static void Main(string[] args)
         {
-
-            Console.WriteLine($"Игра 21 очко. игрок против крупье.");
+            Deck deck = new Deck();
+            deck.ShowCards();
+            deck.ShufflingDeskDividedIntoFourParts();
+            deck.ShowCards();
+            Console.ReadKey();
+            //Console.WriteLine($"Игра 21 очко. игрок против крупье.");
             //Console.WriteLine($"Играется колодой из {deskCards._cards.Count}") ;
         }
     }
 
-    class Game
-    {
-        public Croupier Croupier = new Croupier();
-        public Player Player = new Player();
+    //class Game
+    //{
+    //    public Croupier Croupier = new Croupier();
+    //    //public Player Player = new Player();
 
 
-        public void TakeTwoCards()
-        {
-            Croupier
-        }
-
-        private void InputPlayerName()
-        {
-            Console.WriteLine($"Введите имя Игрока.");
-            string name = Console.ReadLine();
-        }
-    }
+    //    private void InputPlayerName()
+    //    {
+    //        Console.WriteLine($"Введите имя Игрока.");
+    //        string name = Console.ReadLine();
+    //    }
+    //}
 
     class Croupier
     {
-        private DeskCards _deskCards = new DeskCards();
+        private Deck _deck = new Deck();
+        private List<Card> _cards = new List<Card>();
+
 
         public bool GiveOutCards(out Card cards)
         {
             cards = null;
 
-            if (_deskCards.DealOneCards(out Card card))
+            if (_deck.DealOneCards(out Card card))
             {
 
                 return true;
@@ -54,6 +55,17 @@ namespace TwentyOne
                 Console.ReadKey();
                 return false;
             }
+        }
+        public void PlayBlackJack(Player player)
+        {
+
+        }
+
+
+
+        public void FirstHandOutCards()
+        {
+
         }
 
     }
@@ -73,59 +85,43 @@ namespace TwentyOne
 
     }
 
-    class DeskCards
+    class Deck
     {
         private List<Card> _cards = new List<Card>();
         private Stack<Card> _DeskCards = new Stack<Card>();
 
-        public DeskCards()
+        public Deck()
         {
-            const int CountDiamondsSuits = 0;
-            const int CountHeartsSuits = 1;
-            const int CountClubsSuits = 2;
-            const int CountSpadesSuits = 3;
+            CreateCards();
+            //ShufflingDeskFisherYates();
+            //ShufflingDeskDividedIntoFourParts();
+            //ShufflingDeskFisherYates();
+            //CreateDesk();
+        }
 
-            string meaningCards = @"C:\Program Files (x86)\VSProect\Twenty-One\DeckCards.txt";
-            string cardSuitsDiamonds = "буби";
-            string cardSuitsHearts = "черви";
-            string cardSuitsClubs = "крести";
-            string cardSuitsSpades = "пики";
-            int countSuits = 4;
-
-            using (StreamReader reader = new StreamReader(meaningCards))
+        public void ShowCards()
+        {
+            for (int i = 0; i < _cards.Count; i++)
             {
-                string ranks;
-
-                while ((ranks = reader.ReadLine()) != null)
-                {
-                    for (int i = 0; i < countSuits; i++)
-                    {
-                        switch (i)
-                        {
-                            case CountDiamondsSuits:
-                                _cards.Add(new Card(ranks, cardSuitsDiamonds));
-                                break;
-
-                            case CountHeartsSuits:
-                                _cards.Add(new Card(ranks, cardSuitsHearts));
-                                break;
-
-                            case CountClubsSuits:
-                                _cards.Add(new Card(ranks, cardSuitsClubs));
-                                break;
-
-                            case CountSpadesSuits:
-                                _cards.Add(new Card(ranks, cardSuitsSpades));
-                                break;
-                        }
-                    }
-                }
+                _cards[i].ShowInfo();
+                //if (i/9) Сделать вывод в 4 строки.
             }
 
-            ShufflingDeskFisherYates();
-            ShufflingDeskDividedIntoFourParts();
-            ShufflingDeskFisherYates();
-            CreateDesk();
+            Console.WriteLine(" ");
+        }
+
+        private void CreateCards()
+        {
+            string[] ranks = new string[] { "6", "7", "8", "9", "10", "В", "Д", "К", "Т" };
+            string[] suits = new string[] { "♠", "♣", "♦", "♥" };
+
+            for (int i = 0; i < ranks.Length; i++)
+            {
+                for (int j = 0; j < suits.Length; j++)
+                {
+                    _cards.Add(new Card(ranks[i], suits[j]));
+                }
+            }
         }
 
         private void ShufflingDeskFisherYates()
@@ -142,7 +138,7 @@ namespace TwentyOne
             }
         }
 
-        private void ShufflingDeskDividedIntoFourParts()
+        public void ShufflingDeskDividedIntoFourParts()
         {
             List<Card> _mixedCards = new List<Card>();
 
@@ -154,6 +150,7 @@ namespace TwentyOne
             _mixedCards.AddRange(_cards.GetRange(halfDesk, halfDesk));
             _mixedCards.AddRange(_cards.GetRange(0, oneThirdHalfDeck));
             _mixedCards.AddRange(_cards.GetRange(twoThirdHalfDeck, halfDesk - twoThirdHalfDeck));
+
 
             _cards = _mixedCards;
         }
@@ -182,17 +179,18 @@ namespace TwentyOne
 
     class Card
     {
-        public Card(string ranks, string cardSuits)
+        public Card(string ranks, string suits)
         {
             Ranks = ranks;
-            CardSuits = cardSuits;
+            Suits = suits;
         }
+
         public string Ranks { get; private set; }
-        public string CardSuits { get; private set; }
+        public string Suits { get; private set; }
 
         public void ShowInfo()
         {
-            Console.WriteLine($"{Ranks} {CardSuits}");
+            Console.Write($"{Ranks}{Suits} ");
         }
     }
 }
