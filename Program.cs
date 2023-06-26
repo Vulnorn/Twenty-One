@@ -13,26 +13,13 @@ namespace TwentyOne
         {
             Deck deck = new Deck();
             deck.ShowCards();
-            deck.ShufflingDeskDividedIntoFourParts();
+            deck.ShufflingCards();
             deck.ShowCards();
             Console.ReadKey();
             //Console.WriteLine($"Игра 21 очко. игрок против крупье.");
             //Console.WriteLine($"Играется колодой из {deskCards._cards.Count}") ;
         }
     }
-
-    //class Game
-    //{
-    //    public Croupier Croupier = new Croupier();
-    //    //public Player Player = new Player();
-
-
-    //    private void InputPlayerName()
-    //    {
-    //        Console.WriteLine($"Введите имя Игрока.");
-    //        string name = Console.ReadLine();
-    //    }
-    //}
 
     class Croupier
     {
@@ -56,18 +43,16 @@ namespace TwentyOne
                 return false;
             }
         }
+
         public void PlayBlackJack(Player player)
         {
 
         }
 
-
-
         public void FirstHandOutCards()
         {
 
         }
-
     }
 
     class Player
@@ -93,10 +78,8 @@ namespace TwentyOne
         public Deck()
         {
             CreateCards();
-            //ShufflingDeskFisherYates();
-            //ShufflingDeskDividedIntoFourParts();
-            //ShufflingDeskFisherYates();
-            //CreateDesk();
+            ShufflingCards();
+            CreateDesk();
         }
 
         public void ShowCards()
@@ -104,10 +87,11 @@ namespace TwentyOne
             for (int i = 0; i < _cards.Count; i++)
             {
                 _cards[i].ShowInfo();
-                //if (i/9) Сделать вывод в 4 строки.
+                if ((i+1) % 9 == 0)
+                    Console.WriteLine($"\n");
             }
 
-            Console.WriteLine(" ");
+            Console.WriteLine();
         }
 
         private void CreateCards()
@@ -115,44 +99,31 @@ namespace TwentyOne
             string[] ranks = new string[] { "6", "7", "8", "9", "10", "В", "Д", "К", "Т" };
             string[] suits = new string[] { "♠", "♣", "♦", "♥" };
 
-            for (int i = 0; i < ranks.Length; i++)
+            for (int i = 0; i < suits.Length; i++)
             {
-                for (int j = 0; j < suits.Length; j++)
+                for (int j = 0; j < ranks.Length; j++)
                 {
-                    _cards.Add(new Card(ranks[i], suits[j]));
+                    _cards.Add(new Card(ranks[j], suits[i]));
                 }
             }
         }
 
-        private void ShufflingDeskFisherYates()
+        public void ShufflingCards()
         {
-            Card card = null;
             Random random = new Random();
-
-            for (int i = _cards.Count - 1; i > 0; --i)
+            for (int i = 0; i < _cards.Count; i++)
             {
-                int j = random.Next(i + 1);
-                card = _cards[i];
-                _cards[i] = _cards[j];
-                _cards[j] = card;
+                int randomIndex = i;
+
+                while (randomIndex == i)
+                {
+                    randomIndex = random.Next(_cards.Count);
+                }
+
+                Card card = _cards[randomIndex];
+                _cards[randomIndex] = _cards[i];
+                _cards[i] = card;
             }
-        }
-
-        public void ShufflingDeskDividedIntoFourParts()
-        {
-            List<Card> _mixedCards = new List<Card>();
-
-            int halfDesk = _cards.Count / 2;
-            int oneThirdHalfDeck = halfDesk / 3;
-            int twoThirdHalfDeck = halfDesk * 2 / 3;
-
-            _mixedCards.AddRange(_cards.GetRange(oneThirdHalfDeck, twoThirdHalfDeck - oneThirdHalfDeck));
-            _mixedCards.AddRange(_cards.GetRange(halfDesk, halfDesk));
-            _mixedCards.AddRange(_cards.GetRange(0, oneThirdHalfDeck));
-            _mixedCards.AddRange(_cards.GetRange(twoThirdHalfDeck, halfDesk - twoThirdHalfDeck));
-
-
-            _cards = _mixedCards;
         }
 
         private void CreateDesk()
