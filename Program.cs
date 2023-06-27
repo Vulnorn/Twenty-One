@@ -46,6 +46,7 @@ namespace TwentyOne
             if (_deck.TryGetCard(out Card card))
             {
                 player.TakeCard(card);
+
                 if (_cardPoints.ContainsKey(card.Ranks))
                     PointsCardsPlayer = +_cardPoints[card.Ranks];
             }
@@ -56,6 +57,7 @@ namespace TwentyOne
             if (_deck.TryGetCard(out Card card))
             {
                 _cards.Add(card);
+
                 if (_cardPoints.ContainsKey(card.Ranks))
                     PointsCardsCroupier = +_cardPoints[card.Ranks];
             }
@@ -98,12 +100,6 @@ namespace TwentyOne
 
                 MovePlayer(player);
                 MoveCroupier();
-
-                while (PointsCardsCroupier<=BlackJackNumber||PointsCardsCroupier<PointsCardsPlayer||PointsCardsCroupier<= MinPointsCardsCroupier)
-                {
-                    TransferCardCroupier();
-                    ShowCards();
-                }
 
                 if (PointsCardsPlayer>BlackJackNumber&&PointsCardsCroupier>BlackJackNumber)
                 {
@@ -186,8 +182,6 @@ namespace TwentyOne
             ShowCards();
         }
 
-
-
         private void FirstHandOutCards(Player player)
         {
             PointsCardsPlayer = 0;
@@ -213,7 +207,6 @@ namespace TwentyOne
 
             Console.WriteLine();
         }
-
 
         private bool AddCard(Player player)
         {
@@ -278,6 +271,7 @@ namespace TwentyOne
         public void ShowCards()
         {
             Console.WriteLine("У вас в руке");
+
             for (int i = 0; i < _gameHand.Count; i++)
             {
                 _gameHand[i].ShowInfo();
