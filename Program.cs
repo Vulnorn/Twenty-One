@@ -1,4 +1,5 @@
-﻿using System;
+﻿//проверять кол-во карт в колоде. 10 карт - новая колода. 3. закончить игру у игрока. Вывод информации козино / игрок кол-во побед. 
+using System;
 using System.IO;
 using System.Numerics;
 using System.Reflection.Emit;
@@ -16,7 +17,6 @@ namespace TwentyOne
 
             Player player = new Player();
             croupier.PlayBlackJack(player);
-
         }
     }
 
@@ -45,9 +45,6 @@ namespace TwentyOne
             if (_deck.TryGetCard(out Card card))
             {
                 player.TakeCard(card);
-
-                //if (_cardPoints.ContainsKey(card.Ranks))
-                //    PointsCardsPlayer = +_cardPoints[card.Ranks];
             }
         }
 
@@ -69,23 +66,20 @@ namespace TwentyOne
             if (_deck.TryGetCard(out Card card))
             {
                 _cards.Add(card);
-
-                //if (_cardPoints.ContainsKey(card.Ranks))
-                //    PointsCardsCroupier = +_cardPoints[card.Ranks];
             }
         }
 
         public void PlayBlackJack(Player player)
         {
             int numbersCardsInDeck = 0;
-            int minNumbersCardsForParty = 4;
+            int minNumbersCardsForGames = 10;
             int pointsPlayer = 0;
             int pointsCroupier = 0;
+            bool isGame = true;
 
             numbersCardsInDeck = _deck.ShowNumbersCards(numbersCardsInDeck);
 
-
-            while (numbersCardsInDeck >= minNumbersCardsForParty)
+            while (isGame)
             {
                 Console.Clear();
                 FirstHandOutCards(player);
@@ -102,25 +96,6 @@ namespace TwentyOne
                 MovePlayer(player);
                 MoveCroupier();
 
-                if (PointsCardsPlayer > BlackJackNumber && PointsCardsCroupier > BlackJackNumber)
-                {
-                    ShowMassage("Ничья. Оба игрока собрали больше.", numbersCardsInDeck);
-                    return;
-                }
-
-                if (PointsCardsPlayer > BlackJackNumber && PointsCardsCroupier <= BlackJackNumber || PointsCardsPlayer < BlackJackNumber && PointsCardsCroupier < BlackJackNumber && PointsCardsPlayer < PointsCardsCroupier)
-                {
-                    ShowMassage("Дилер выиграл", numbersCardsInDeck);
-                    pointsCroupier++;
-                    return;
-                }
-
-                if (PointsCardsPlayer <= BlackJackNumber && PointsCardsCroupier > BlackJackNumber || PointsCardsPlayer < BlackJackNumber && PointsCardsCroupier < BlackJackNumber && PointsCardsPlayer > PointsCardsCroupier)
-                {
-                    ShowMassage("Игрок победил!", numbersCardsInDeck);
-                    pointsPlayer++;
-                    return;
-                }
             }
         }
 
@@ -131,7 +106,7 @@ namespace TwentyOne
             if (PointsCardsCroupier == BlackJackNumber && PointsCardsPlayer == BlackJackNumber)
             {
                 ShowMassage("Ничья. Оба игрока собрали Блек Джек. Поздравляем!", numbersCardsInDeck);
-                isWin= true;
+                isWin = true;
             }
 
             if (PointsCardsPlayer == BlackJackNumber)
@@ -148,6 +123,26 @@ namespace TwentyOne
                 isWin = true;
             }
 
+            if (PointsCardsPlayer > BlackJackNumber && PointsCardsCroupier > BlackJackNumber)
+            {
+                ShowMassage("Ничья. Оба игрока собрали больше.", numbersCardsInDeck);
+                isWin = true;
+            }
+
+            if (PointsCardsPlayer > BlackJackNumber && PointsCardsCroupier <= BlackJackNumber || PointsCardsPlayer < BlackJackNumber && PointsCardsCroupier < BlackJackNumber && PointsCardsPlayer < PointsCardsCroupier)
+            {
+                ShowMassage("Дилер выиграл", numbersCardsInDeck);
+                //pointsCroupier++;
+                isWin = true;
+            }
+
+            if (PointsCardsPlayer <= BlackJackNumber && PointsCardsCroupier > BlackJackNumber || PointsCardsPlayer < BlackJackNumber && PointsCardsCroupier < BlackJackNumber && PointsCardsPlayer > PointsCardsCroupier)
+            {
+                ShowMassage("Игрок победил!", numbersCardsInDeck);
+                //pointsPlayer++;
+                isWin = true;
+            }
+
             return isWin;
         }
         private void MovePlayer(Player player)
@@ -156,22 +151,22 @@ namespace TwentyOne
             const string СheckMenu = "2";
 
             string userInput;
-            bool movePlayer = true;
+            bool isMovePlayer = true;
 
-            while (movePlayer)
+            while (isMovePlayer)
             {
                 Console.WriteLine($"{TakeCardMenu} - Взять одну карту.");
-                Console.WriteLine($"{СheckMenu} - Пас.");
+                Console.WriteLine($"{СheckMenu} - Чек.");
                 userInput = Console.ReadLine();
 
                 switch (userInput)
                 {
                     case TakeCardMenu:
-                        AddCard(player);
+                        isMovePlayer = AddCard(player, isMovePlayer);
                         break;
 
                     case СheckMenu:
-                        movePlayer = false;
+                        isMovePlayer = false;
                         break;
 
                     default:
@@ -181,19 +176,30 @@ namespace TwentyOne
             }
         }
 
+        private bool AddCard(Player player, bool isMovePlayer)
+        {
+            TransferCardPlayer(player);
+            PointsCardsPlayer = CalculatePoints(player.GetCards());
+            player.ShowCards();
+
+            if (PointsCardsPlayer > BlackJackNumber)
+            {
+                Console.WriteLine($"Сумма карт превысила {BlackJackNumber} ход передается крупье.");
+                return isMovePlayer = false;
+            }
+
+            return isMovePlayer = true;
+        }
         private void MoveCroupier()
         {
-            int delayDisplay = 3000;
-
-            //while (PointsCardsCroupier <= BlackJackNumber || PointsCardsCroupier < PointsCardsPlayer || PointsCardsCroupier <= MinPointsCardsCroupier)
-            while (PointsCardsCroupier <= 16)
+            while (PointsCardsCroupier <= MinPointsCardsCroupier)
             {
                 TransferCardCroupier();
-                //Thread.Sleep(delayDisplay);
-                ShowCards();
                 PointsCardsCroupier = CalculatePoints(_cards);
             }
-        }//проверять кол-во карт в колоде. 10 карт - новая колода. 3. закончить игру у игрока. Вывод информации козино / игрок кол-во побед. 
+
+            ShowCards();
+        }
 
         private int ShowMassage(string massage, int numbersCardsInDeck)
         {
@@ -238,19 +244,6 @@ namespace TwentyOne
             Console.WriteLine();
         }
 
-        private bool AddCard(Player player)
-        {
-            TransferCardPlayer(player);
-            player.ShowCards();
-
-            if (PointsCardsPlayer > BlackJackNumber)
-            {
-                Console.WriteLine($"Сумма карт превысила {BlackJackNumber} ход передается крупье.");
-                return false;
-            }
-
-            return true;
-        }
 
         private void CreateTablePoint()
         {
@@ -331,7 +324,13 @@ namespace TwentyOne
         {
             CreateCards();
             ShuffleCards();
-            CreateDesk();
+            AddCardsInDesk();
+        }
+
+        public void AddDesk()
+        {
+            ShuffleCards();
+            AddCardsInDesk();
         }
 
         public void ShowCards()
@@ -358,7 +357,7 @@ namespace TwentyOne
             }
         }
 
-        public void ShuffleCards()
+        private void ShuffleCards()
         {
             Random random = new Random();
             for (int i = 0; i < _cards.Count; i++)
@@ -376,7 +375,7 @@ namespace TwentyOne
             }
         }
 
-        private void CreateDesk()
+        private void AddCardsInDesk()
         {
             foreach (Card element in _cards)
             {
