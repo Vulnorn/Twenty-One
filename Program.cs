@@ -13,7 +13,7 @@ namespace TwentyOne
     {
         static void Main(string[] args)
         {
-            Croupier croupier = new Croupier(21, 17);
+            Croupier croupier = new Croupier(17);
 
             Player player = new Player();
             croupier.PlayBlackJack(player);
@@ -26,19 +26,22 @@ namespace TwentyOne
         private List<Card> _cards = new List<Card>();
         private Dictionary<string, int> _cardPoints = new Dictionary<string, int>();
 
-        public Croupier(int blackJackNumber, int minPointsCardsCroupier)
+        public Croupier(int minPointsCardsCroupier)
         {
-            BlackJackNumber = blackJackNumber;
             MinPointsCardsCroupier = minPointsCardsCroupier;
+            BlackJackNumber = 21;
+            PointsWinPlayer = 0;
+            PointsWinCroupier = 0;
 
             CreateTablePoint();
         }
 
         public int BlackJackNumber { get; private set; }
         public int MinPointsCardsCroupier { get; private set; }
-
         public int PointsCardsPlayer { get; private set; }
         public int PointsCardsCroupier { get; private set; }
+        public int PointsWinPlayer { get; private set; }
+        public int PointsWinCroupier { get; private set; }
 
         private void TransferCardPlayer(Player player)
         {
@@ -73,88 +76,172 @@ namespace TwentyOne
         {
             int numbersCardsInDeck = 0;
             int minNumbersCardsForGames = 10;
-            int pointsPlayer = 0;
-            int pointsCroupier = 0;
             bool isGame = true;
-
-            numbersCardsInDeck = _deck.ShowNumbersCards(numbersCardsInDeck);
+            bool isFinish;
 
             while (isGame)
             {
-                Console.Clear();
+                if (OutGame())
+                {
+                    isGame = false;
+                    continue;
+                }
+
+                isFinish = false;
+                numbersCardsInDeck = _deck.ShowNumbersCards(numbersCardsInDeck);
+
+                if (numbersCardsInDeck < minNumbersCardsForGames)
+                    _deck.AddDesk();
+
                 FirstHandOutCards(player);
+                ShoyGameTabel(player);
 
-                PointsCardsCroupier = CalculatePoints(_cards);
-                PointsCardsPlayer = CalculatePoints(player.GetCards());
-
-                Console.WriteLine($"У игрока {PointsCardsPlayer} очков");
-                Console.WriteLine($"У крупье {PointsCardsCroupier} очков");
-
-                if (PickWinner(numbersCardsInDeck))
+                if (PickWinner(player, isFinish))
                     continue;
 
-                MovePlayer(player);
-                MoveCroupier();
+                GamePlayer(player);
+                GameCroupier(player);
+                isFinish = true;
 
+                if (PickWinner(player, isFinish))
+                    continue;
             }
         }
 
-        private bool PickWinner(int numbersCardsInDeck)
+        private bool OutGame()
+        {
+            const string GameMenu = "1";
+            const string OutGameMenu = "2";
+
+            bool isOut = false;
+            string userInput;
+
+            Console.Clear();
+            Console.WriteLine($"{GameMenu} - Играть.");
+            Console.WriteLine($"{OutGameMenu} - Выйти из игры.");
+            userInput = Console.ReadLine();
+
+            switch (userInput)
+            {
+                case GameMenu:
+                    isOut = false;
+                    break;
+
+                case OutGameMenu:
+                    isOut = true;
+                    break;
+
+                default:
+                    break;
+            }
+
+            return isOut;
+        }
+
+        private void ShoyGameTabel(Player player)
+        {
+            Console.Clear();
+            Console.WriteLine();
+            Console.WriteLine("    Добро пожаловать в игру Блек-Джек    ");
+            Console.WriteLine($"Счет в игре: Казино {PointsWinCroupier} побед | Игрок {PointsWinPlayer} побед");
+            Console.WriteLine(new string('_', 60));
+
+            PointsCardsCroupier = CalculatePoints(_cards);
+            PointsCardsPlayer = CalculatePoints(player.GetCards());
+
+            Console.WriteLine(new string('_', 60));
+
+            player.ShowCards();
+
+            Console.WriteLine($"\nУ игрока {PointsCardsPlayer} очков\n");
+            Console.Write($"У крупье в руке: ");
+
+            _cards[0].ShowInfo();
+            Console.Write(" ##");
+
+            Console.WriteLine();
+            Console.WriteLine(new string('_', 60));
+            Console.WriteLine();
+        }
+
+        private void EarnPointsForWinPlayer()
+        {
+            PointsWinPlayer++;
+        }
+
+        private void EarnPointsForWinCroupier()
+        {
+            PointsWinCroupier++;
+        }
+
+        private bool PickWinner(Player player, bool isFinish)
         {
             bool isWin = false;
 
             if (PointsCardsCroupier == BlackJackNumber && PointsCardsPlayer == BlackJackNumber)
             {
-                ShowMassage("Ничья. Оба игрока собрали Блек Джек. Поздравляем!", numbersCardsInDeck);
+                ShowMassage("Ничья. Оба игрока собрали Блек-Джек. Поздравляем!");
+                player.ShowCards();
+                ShowCards();
                 isWin = true;
             }
-
-            if (PointsCardsPlayer == BlackJackNumber)
+            else if (PointsCardsPlayer == BlackJackNumber)
             {
-                ShowMassage("Игрок собрал Блек Джек. Поздравляем, Вы победили!", numbersCardsInDeck);
-                //pointsPlayer++;
+                ShowMassage("Игрок собрал Блек-Джек. Поздравляем, Вы победили!");
+                EarnPointsForWinPlayer();
                 isWin = true;
             }
-
-            if (PointsCardsCroupier == BlackJackNumber)
+            else if (PointsCardsCroupier == BlackJackNumber)
             {
-                ShowMassage("Дилер получил Блек Джек. Вы проиграли эту партию.", numbersCardsInDeck);
-                //pointsCroupier++;
+                ShowMassage("Крупье получил Блек-Джек. Вы проиграли эту партию.");
+                ShowCards();
+                EarnPointsForWinCroupier();
                 isWin = true;
             }
-
-            if (PointsCardsPlayer > BlackJackNumber && PointsCardsCroupier > BlackJackNumber)
+            else if (PointsCardsPlayer > BlackJackNumber && PointsCardsCroupier > BlackJackNumber)
             {
-                ShowMassage("Ничья. Оба игрока собрали больше.", numbersCardsInDeck);
+                ShowMassage("Ничья. Оба игрока собрали больше.");
                 isWin = true;
             }
-
-            if (PointsCardsPlayer > BlackJackNumber && PointsCardsCroupier <= BlackJackNumber || PointsCardsPlayer < BlackJackNumber && PointsCardsCroupier < BlackJackNumber && PointsCardsPlayer < PointsCardsCroupier)
+            else if (PointsCardsPlayer > BlackJackNumber && isFinish == true)
             {
-                ShowMassage("Дилер выиграл", numbersCardsInDeck);
-                //pointsCroupier++;
+                ShowMassage("Крупье выиграл");
+                EarnPointsForWinCroupier();
                 isWin = true;
             }
-
-            if (PointsCardsPlayer <= BlackJackNumber && PointsCardsCroupier > BlackJackNumber || PointsCardsPlayer < BlackJackNumber && PointsCardsCroupier < BlackJackNumber && PointsCardsPlayer > PointsCardsCroupier)
+            else if (PointsCardsPlayer < PointsCardsCroupier && isFinish == true)
             {
-                ShowMassage("Игрок победил!", numbersCardsInDeck);
-                //pointsPlayer++;
+                ShowMassage("Крупье выиграл");
+                EarnPointsForWinCroupier();
+                isWin = true;
+            }
+            else if (PointsCardsCroupier > BlackJackNumber && isFinish == true)
+            {
+                ShowMassage("Игрок победил!");
+                EarnPointsForWinPlayer();
+                isWin = true;
+            }
+            else if (PointsCardsPlayer > PointsCardsCroupier && isFinish == true)
+            {
+                ShowMassage("Игрок победил!");
+                EarnPointsForWinPlayer();
                 isWin = true;
             }
 
             return isWin;
         }
-        private void MovePlayer(Player player)
+
+        private void GamePlayer(Player player)
         {
             const string TakeCardMenu = "1";
             const string СheckMenu = "2";
 
             string userInput;
-            bool isMovePlayer = true;
+            bool isGamePlayer = true;
 
-            while (isMovePlayer)
+            while (isGamePlayer)
             {
+                ShoyGameTabel(player);
                 Console.WriteLine($"{TakeCardMenu} - Взять одну карту.");
                 Console.WriteLine($"{СheckMenu} - Чек.");
                 userInput = Console.ReadLine();
@@ -162,15 +249,14 @@ namespace TwentyOne
                 switch (userInput)
                 {
                     case TakeCardMenu:
-                        isMovePlayer = AddCard(player, isMovePlayer);
+                        isGamePlayer = AddCard(player, isGamePlayer);
                         break;
 
                     case СheckMenu:
-                        isMovePlayer = false;
+                        isGamePlayer = false;
                         break;
 
                     default:
-                        DefaultCase(player);
                         break;
                 }
             }
@@ -180,18 +266,19 @@ namespace TwentyOne
         {
             TransferCardPlayer(player);
             PointsCardsPlayer = CalculatePoints(player.GetCards());
-            player.ShowCards();
 
             if (PointsCardsPlayer > BlackJackNumber)
             {
-                Console.WriteLine($"Сумма карт превысила {BlackJackNumber} ход передается крупье.");
+                Console.WriteLine($"Сумма карт превысила {BlackJackNumber} ход передается Крупье.");
                 return isMovePlayer = false;
             }
 
             return isMovePlayer = true;
         }
-        private void MoveCroupier()
+        private void GameCroupier(Player player)
         {
+            ShoyGameTabel(player);
+
             while (PointsCardsCroupier <= MinPointsCardsCroupier)
             {
                 TransferCardCroupier();
@@ -199,23 +286,13 @@ namespace TwentyOne
             }
 
             ShowCards();
+            Console.WriteLine($"\nУ Крупье {PointsCardsCroupier} очков.\n");
         }
 
-        private int ShowMassage(string massage, int numbersCardsInDeck)
+        private void ShowMassage(string massage)
         {
             Console.WriteLine(massage);
             Console.ReadKey();
-            return numbersCardsInDeck = _deck.ShowNumbersCards(numbersCardsInDeck);
-        }
-
-        private void DefaultCase(Player player)
-        {
-            Console.Clear();
-            Console.WriteLine("Ошибка ввода команды.");
-            Console.WriteLine();
-
-            player.ShowCards();
-            ShowCards();
         }
 
         private void FirstHandOutCards(Player player)
@@ -224,17 +301,16 @@ namespace TwentyOne
             player.ClearHand();
             TransferCardPlayer(player);
             TransferCardPlayer(player);
-            player.ShowCards();
 
+            _cards.Clear();
             PointsCardsCroupier = 0;
             TransferCardCroupier();
             TransferCardCroupier();
-            ShowCards();
         }
 
         private void ShowCards()
         {
-            Console.WriteLine("У крупье в руке");
+            Console.WriteLine("У Крупье в руке");
 
             for (int i = 0; i < _cards.Count; i++)
             {
@@ -243,7 +319,6 @@ namespace TwentyOne
 
             Console.WriteLine();
         }
-
 
         private void CreateTablePoint()
         {
@@ -275,11 +350,6 @@ namespace TwentyOne
             _cardPoints.Add("К", pointsKing);
             _cardPoints.Add("Т", pointsAce);
         }
-
-        private void ScoringPoints()
-        {
-
-        }
     }
 
     class Player
@@ -290,7 +360,6 @@ namespace TwentyOne
         {
             return _gameHand.ToList();
         }
-
 
         public void TakeCard(Card card)
         {
@@ -331,16 +400,6 @@ namespace TwentyOne
         {
             ShuffleCards();
             AddCardsInDesk();
-        }
-
-        public void ShowCards()
-        {
-            for (int i = 0; i < _cards.Count; i++)
-            {
-                _cards[i].ShowInfo();
-            }
-
-            Console.WriteLine();
         }
 
         private void CreateCards()
