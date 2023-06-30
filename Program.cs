@@ -1,5 +1,4 @@
-﻿//проверять кол-во карт в колоде. 10 карт - новая колода. 3. закончить игру у игрока. Вывод информации козино / игрок кол-во побед. 
-using System;
+﻿using System;
 using System.IO;
 using System.Numerics;
 using System.Reflection.Emit;
