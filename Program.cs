@@ -1,12 +1,4 @@
-﻿using System;
-using System.IO;
-using System.Numerics;
-using System.Reflection.Emit;
-using System.Runtime.CompilerServices;
-using System.Threading.Channels;
-using System.Xml.Linq;
-
-namespace TwentyOne
+﻿namespace TwentyOne
 {
     class Program
     {
@@ -23,7 +15,7 @@ namespace TwentyOne
     {
         private Deck _deck = new Deck();
         private List<Card> _cards = new List<Card>();
-        private Dictionary<string, int> _cardPoints = new Dictionary<string, int>();
+        private Dictionary<string, int> _cardPoints;
 
         public Croupier(int minPointsCardsCroupier)
         {
@@ -31,8 +23,22 @@ namespace TwentyOne
             BlackJackNumber = 21;
             PointsWinPlayer = 0;
             PointsWinCroupier = 0;
-
-            CreateTablePoint();
+            _cardPoints = new Dictionary<string, int>()
+            {
+                ["2"] = 2,
+                ["3"] = 3,
+                ["4"] = 4,
+                ["5"] = 5,
+                ["6"] = 6,
+                ["7"] = 7,
+                ["8"] = 8,
+                ["9"] = 9,
+                ["10"] = 10,
+                ["В"] = 10,
+                ["Д"] = 10,
+                ["К"] = 10,
+                ["Т"] = 11
+            };
         }
 
         public int BlackJackNumber { get; private set; }
@@ -41,35 +47,6 @@ namespace TwentyOne
         public int PointsCardsCroupier { get; private set; }
         public int PointsWinPlayer { get; private set; }
         public int PointsWinCroupier { get; private set; }
-
-        private void TransferCardPlayer(Player player)
-        {
-            if (_deck.TryGetCard(out Card card))
-            {
-                player.TakeCard(card);
-            }
-        }
-
-        private int CalculatePoints(List<Card> cards)
-        {
-            int points = 0;
-
-            foreach (Card card in cards)
-            {
-                int point = _cardPoints[card.Ranks];
-                points += point;
-            }
-
-            return points;
-        }
-
-        private void TransferCardCroupier()
-        {
-            if (_deck.TryGetCard(out Card card))
-            {
-                _cards.Add(card);
-            }
-        }
 
         public void PlayBlackJack(Player player)
         {
@@ -90,9 +67,9 @@ namespace TwentyOne
                 numbersCardsInDeck = _deck.ShowNumbersCards(numbersCardsInDeck);
 
                 if (numbersCardsInDeck < minNumbersCardsForGames)
-                    _deck.AddDesk();
+                    _deck.AddDeck();
 
-                FirstHandOutCards(player);
+                HandOutFirstCards(player);
                 ShoyGameTabel(player);
 
                 if (PickWinner(player, isFinish))
@@ -104,6 +81,35 @@ namespace TwentyOne
 
                 if (PickWinner(player, isFinish))
                     continue;
+            }
+        }
+
+        private void TransferCardPlayer(Player player)
+        {
+            if (_deck.TryGetCard(out Card card))
+            {
+                player.TakeCard(card);
+            }
+        }
+
+        private int CalculatePoints(List<Card> cards)
+        {
+            int points = 0;
+
+            foreach (Card card in cards)
+            {
+                int point = _cardPoints[card.Rank];
+                points += point;
+            }
+
+            return points;
+        }
+
+        private void TransferCardCroupier()
+        {
+            if (_deck.TryGetCard(out Card card))
+            {
+                _cards.Add(card);
             }
         }
 
@@ -131,24 +137,33 @@ namespace TwentyOne
                     break;
 
                 default:
+                    ShowMessageError();
                     break;
             }
 
             return isOut;
         }
 
+        private void ShowMessageError()
+        {
+            Console.WriteLine("Не корректный ввод.");
+            Console.ReadKey();
+        }
+
         private void ShoyGameTabel(Player player)
         {
+            string border = new string('_', 60);
+
             Console.Clear();
             Console.WriteLine();
             Console.WriteLine("    Добро пожаловать в игру Блек-Джек    ");
             Console.WriteLine($"Счет в игре: Казино {PointsWinCroupier} побед | Игрок {PointsWinPlayer} побед");
-            Console.WriteLine(new string('_', 60));
+            Console.WriteLine(border);
 
             PointsCardsCroupier = CalculatePoints(_cards);
             PointsCardsPlayer = CalculatePoints(player.GetCards());
 
-            Console.WriteLine(new string('_', 60));
+            Console.WriteLine(border);
 
             player.ShowCards();
 
@@ -159,7 +174,7 @@ namespace TwentyOne
             Console.Write(" ##");
 
             Console.WriteLine();
-            Console.WriteLine(new string('_', 60));
+            Console.WriteLine(border);
             Console.WriteLine();
         }
 
@@ -208,22 +223,28 @@ namespace TwentyOne
                 EarnPointsForWinCroupier();
                 isWin = true;
             }
-            else if (PointsCardsPlayer < PointsCardsCroupier && isFinish == true)
-            {
-                ShowMassage("Крупье выиграл");
-                EarnPointsForWinCroupier();
-                isWin = true;
-            }
             else if (PointsCardsCroupier > BlackJackNumber && isFinish == true)
             {
                 ShowMassage("Игрок победил!");
                 EarnPointsForWinPlayer();
                 isWin = true;
             }
+            else if (PointsCardsPlayer < PointsCardsCroupier && isFinish == true)
+            {
+                ShowMassage("Крупье выиграл");
+                EarnPointsForWinCroupier();
+                isWin = true;
+            }
             else if (PointsCardsPlayer > PointsCardsCroupier && isFinish == true)
             {
                 ShowMassage("Игрок победил!");
                 EarnPointsForWinPlayer();
+                isWin = true;
+            }
+            else if (PointsCardsPlayer == PointsCardsCroupier && isFinish == true)
+            {
+                ShowMassage("Ничья!");
+                Console.ReadKey();
                 isWin = true;
             }
 
@@ -256,6 +277,7 @@ namespace TwentyOne
                         break;
 
                     default:
+                        ShowMessageError();
                         break;
                 }
             }
@@ -294,7 +316,7 @@ namespace TwentyOne
             Console.ReadKey();
         }
 
-        private void FirstHandOutCards(Player player)
+        private void HandOutFirstCards(Player player)
         {
             PointsCardsPlayer = 0;
             player.ClearHand();
@@ -317,37 +339,6 @@ namespace TwentyOne
             }
 
             Console.WriteLine();
-        }
-
-        private void CreateTablePoint()
-        {
-            int pointsTwo = 2;
-            int pointsThree = 3;
-            int pointsFour = 4;
-            int pointsFive = 5;
-            int pointsSix = 6;
-            int pointsSeven = 7;
-            int pointsEight = 8;
-            int pointsNine = 9;
-            int pointsTen = 10;
-            int pointsJack = 10;
-            int pointsQueen = 10;
-            int pointsKing = 10;
-            int pointsAce = 11;
-
-            _cardPoints.Add("2", pointsTwo);
-            _cardPoints.Add("3", pointsThree);
-            _cardPoints.Add("4", pointsFour);
-            _cardPoints.Add("5", pointsFive);
-            _cardPoints.Add("6", pointsSix);
-            _cardPoints.Add("7", pointsSeven);
-            _cardPoints.Add("8", pointsEight);
-            _cardPoints.Add("9", pointsNine);
-            _cardPoints.Add("10", pointsTen);
-            _cardPoints.Add("В", pointsJack);
-            _cardPoints.Add("Д", pointsQueen);
-            _cardPoints.Add("К", pointsKing);
-            _cardPoints.Add("Т", pointsAce);
         }
     }
 
@@ -385,69 +376,28 @@ namespace TwentyOne
 
     class Deck
     {
-        private List<Card> _cards = new List<Card>();
-        private Stack<Card> _deskCards = new Stack<Card>();
+        private static Random _random = new Random();
+        private Stack<Card> _cards = new Stack<Card>();
 
         public Deck()
         {
-            CreateCards();
-            ShuffleCards();
-            AddCardsInDesk();
+            AddDeck();
         }
 
-        public void AddDesk()
+        public void AddDeck()
         {
-            ShuffleCards();
-            AddCardsInDesk();
-        }
-
-        private void CreateCards()
-        {
-            string[] ranks = new string[] { "2", "3", "4", "5", "6", "7", "8", "9", "10", "В", "Д", "К", "Т" };
-            string[] suits = new string[] { "♠", "♣", "♦", "♥" };
-
-            for (int i = 0; i < suits.Length; i++)
-            {
-                for (int j = 0; j < ranks.Length; j++)
-                {
-                    _cards.Add(new Card(ranks[j], suits[i]));
-                }
-            }
-        }
-
-        private void ShuffleCards()
-        {
-            Random random = new Random();
-            for (int i = 0; i < _cards.Count; i++)
-            {
-                int randomIndex = i;
-
-                while (randomIndex == i)
-                {
-                    randomIndex = random.Next(_cards.Count);
-                }
-
-                Card card = _cards[randomIndex];
-                _cards[randomIndex] = _cards[i];
-                _cards[i] = card;
-            }
-        }
-
-        private void AddCardsInDesk()
-        {
-            foreach (Card element in _cards)
-            {
-                _deskCards.Push(element);
-            }
+            List<Card> cards = CreateCards();
+            cards = ShuffleCards(cards);
+            AddCardsInDeck(cards);
         }
 
         public bool TryGetCard(out Card card)
         {
             card = null;
 
-            if (_deskCards.Count > 0)
+            if (_cards.Count > 0)
             {
-                card = _deskCards.Pop();
+                card = _cards.Pop();
                 return true;
             }
 
@@ -456,24 +406,69 @@ namespace TwentyOne
 
         public int ShowNumbersCards(int numbersCards)
         {
-            return numbersCards = _deskCards.Count;
+            return numbersCards = _cards.Count;
+        }
+
+        private List<Card> CreateCards()
+        {
+            List<Card> cards = new List<Card>();
+            string[] ranks = new string[] { "2", "3", "4", "5", "6", "7", "8", "9", "10", "В", "Д", "К", "Т" };
+            string[] suits = new string[] { "♠", "♣", "♦", "♥" };
+
+            for (int i = 0; i < suits.Length; i++)
+            {
+                for (int j = 0; j < ranks.Length; j++)
+                {
+                    cards.Add(new Card(ranks[j], suits[i]));
+                }
+            }
+
+            return cards;
+        }
+
+        private List<Card> ShuffleCards(List<Card> cards)
+        {
+
+            for (int i = 0; i < cards.Count; i++)
+            {
+                int randomIndex = i;
+
+                while (randomIndex == i)
+                {
+                    randomIndex = _random.Next(cards.Count);
+                }
+
+                Card card = cards[randomIndex];
+                cards[randomIndex] = cards[i];
+                cards[i] = card;
+            }
+
+            return cards;
+        }
+
+        private void AddCardsInDeck(List<Card> cards)
+        {
+            foreach (Card card in cards)
+            {
+                _cards.Push(card);
+            }
         }
     }
 
     class Card
     {
-        public Card(string ranks, string suits)
+        public Card(string rank, string suit)
         {
-            Ranks = ranks;
-            Suits = suits;
+            Rank = rank;
+            Suit = suit;
         }
 
-        public string Ranks { get; private set; }
-        public string Suits { get; private set; }
+        public string Rank { get; private set; }
+        public string Suit { get; private set; }
 
         public void ShowInfo()
         {
-            Console.Write($"{Ranks}{Suits} ");
+            Console.Write($"{Rank}{Suit} ");
         }
     }
 }
