@@ -4,25 +4,30 @@
     {
         static void Main(string[] args)
         {
-            Croupier croupier = new Croupier(17);
+            BlackJackGame blackJackGame = new BlackJackGame(17);
 
-            Player player = new Player();
-            croupier.PlayBlackJack(player);
+            List<Player> playerList = new List<Player>()
+            {
+                new Cropier(),
+                new Player()
+            };
+
+            blackJackGame.PlayBlackJack(playerList);
         }
     }
 
-    class Croupier
+
+
+    class BlackJackGame
     {
         private Deck _deck = new Deck();
-        private List<Card> _cards = new List<Card>();
         private Dictionary<string, int> _cardPoints;
 
-        public Croupier(int minPointsCardsCroupier)
+        public BlackJackGame(int minPointsCards)
         {
-            MinPointsCardsCroupier = minPointsCardsCroupier;
+            MinPointsCards = minPointsCards;
             BlackJackNumber = 21;
-            PointsWinPlayer = 0;
-            PointsWinCroupier = 0;
+
             _cardPoints = new Dictionary<string, int>()
             {
                 ["2"] = 2,
@@ -42,18 +47,32 @@
         }
 
         public int BlackJackNumber { get; private set; }
-        public int MinPointsCardsCroupier { get; private set; }
+        public int MinPointsCards { get; private set; }
         public int PointsCardsPlayer { get; private set; }
         public int PointsCardsCroupier { get; private set; }
         public int PointsWinPlayer { get; private set; }
         public int PointsWinCroupier { get; private set; }
 
-        public void PlayBlackJack(Player player)
+        private int[] CreatelistPlayers(List<Player> players)
+        {
+            int[] pointsWin = new int[players.Count()];
+
+            for (int i = 0;i>pointsWin.Length;i++)
+            {
+                pointsWin[i] = 0;
+            }
+
+            return pointsWin;
+        }
+
+        public void PlayBlackJack(List<Player> players)
         {
             int numbersCardsInDeck = 0;
             int minNumbersCardsForGames = 10;
             bool isGame = true;
             bool isFinish;
+
+            int[] pointsWin = CreatelistPlayers(players);
 
             while (isGame)
             {
@@ -69,8 +88,8 @@
                 if (numbersCardsInDeck < minNumbersCardsForGames)
                     _deck.AddDeck();
 
-                HandOutFirstCards(player);
-                ShoyGameTabel(player);
+                HandOutFirstCards(players, pointsWin);
+                ShoyGameTabel(players);
 
                 if (PickWinner(player, isFinish))
                     continue;
@@ -84,7 +103,7 @@
             }
         }
 
-        private void TransferCardPlayer(Player player)
+        private void TransferCard(Player player)
         {
             if (_deck.TryGetCard(out Card card))
             {
@@ -105,13 +124,13 @@
             return points;
         }
 
-        private void TransferCardCroupier()
-        {
-            if (_deck.TryGetCard(out Card card))
-            {
-                _cards.Add(card);
-            }
-        }
+        //private void TransferCardCroupier()
+        //{
+        //    if (_deck.TryGetCard(out Card card))
+        //    {
+        //        _cards.Add(card);
+        //    }
+        //}
 
         private bool OutGame()
         {
@@ -150,27 +169,27 @@
             Console.ReadKey();
         }
 
-        private void ShoyGameTabel(Player player)
+        private void ShoyGameTabel(List<Player> players, int[] pointsWins)
         {
             string border = new string('_', 60);
 
             Console.Clear();
             Console.WriteLine();
             Console.WriteLine("    Добро пожаловать в игру Блек-Джек    ");
-            Console.WriteLine($"Счет в игре: Казино {PointsWinCroupier} побед | Игрок {PointsWinPlayer} побед");
+            Console.WriteLine($"Счет в игре: Казино {pointsWins[0]} побед | Игрок {pointsWins[1]} побед");
             Console.WriteLine(border);
 
-            PointsCardsCroupier = CalculatePoints(_cards);
-            PointsCardsPlayer = CalculatePoints(player.GetCards());
+            PointsCardsCroupier = CalculatePoints(players[0].GetCards());
+            PointsCardsPlayer = CalculatePoints(players[1].GetCards());
 
             Console.WriteLine(border);
 
-            player.ShowCards();
+            players[1].ShowCards();
 
             Console.WriteLine($"\nУ игрока {PointsCardsPlayer} очков\n");
             Console.Write($"У крупье в руке: ");
 
-            _cards[0].ShowInfo();
+            players[0].ShowCards();
             Console.Write(" ##");
 
             Console.WriteLine();
@@ -188,7 +207,7 @@
             PointsWinCroupier++;
         }
 
-        private bool PickWinner(Player player, bool isFinish)
+        private bool PickWinner(Player player, Cropier cropier, bool isFinish)
         {
             bool isWin = false;
 
@@ -196,7 +215,7 @@
             {
                 ShowMassage("Ничья. Оба игрока собрали Блек-Джек. Поздравляем!");
                 player.ShowCards();
-                ShowCards();
+                cropier.ShowCards();
                 isWin = true;
             }
             else if (PointsCardsPlayer == BlackJackNumber)
@@ -208,7 +227,7 @@
             else if (PointsCardsCroupier == BlackJackNumber)
             {
                 ShowMassage("Крупье получил Блек-Джек. Вы проиграли эту партию.");
-                ShowCards();
+                cropier.ShowCards();
                 EarnPointsForWinCroupier();
                 isWin = true;
             }
@@ -285,7 +304,7 @@
 
         private bool AddCard(Player player, bool isMovePlayer)
         {
-            TransferCardPlayer(player);
+            TransferCard(player);
             PointsCardsPlayer = CalculatePoints(player.GetCards());
 
             if (PointsCardsPlayer > BlackJackNumber)
@@ -296,17 +315,17 @@
 
             return isMovePlayer = true;
         }
-        private void GameCroupier(Player player)
+        private void GameCroupier(Player player, Cropier cropier)
         {
-            ShoyGameTabel(player);
+            ShoyGameTabel(player, cropier);
 
-            while (PointsCardsCroupier <= MinPointsCardsCroupier)
+            while (PointsCardsCroupier <= MinPointsCards)
             {
-                TransferCardCroupier();
-                PointsCardsCroupier = CalculatePoints(_cards);
+                TransferCard(cropier);
+                PointsCardsCroupier = CalculatePoints(cropier.GetCards());
             }
 
-            ShowCards();
+            cropier.ShowCards();
             Console.WriteLine($"\nУ Крупье {PointsCardsCroupier} очков.\n");
         }
 
@@ -316,17 +335,23 @@
             Console.ReadKey();
         }
 
-        private void HandOutFirstCards(Player player)
+        private void HandOutFirstCards(List <Player> players, int[] pointsWin)
         {
-            PointsCardsPlayer = 0;
-            player.ClearHand();
-            TransferCardPlayer(player);
-            TransferCardPlayer(player);
+            //PointsCardsPlayer = 0;
+            //player.ClearHand();
+            //TransferCard(player);
+            //TransferCard(player);
 
-            _cards.Clear();
-            PointsCardsCroupier = 0;
-            TransferCardCroupier();
-            TransferCardCroupier();
+            //cropier.ClearHand();
+            //PointsCardsCroupier = 0;
+            //TransferCard(cropier);
+            //TransferCard(cropier);
+
+            for (int i = 0;i<players.Count; i++)
+            {
+                players[i].ClearHand();
+
+            }
         }
 
         private void ShowCards()
@@ -342,9 +367,18 @@
         }
     }
 
+
+
     class Player
     {
         private List<Card> _gameHand = new List<Card>();
+
+        public int PointsWin { get; private set; }
+
+        public void TakePointsWin()
+        {
+
+        }
 
         public List<Card> GetCards()
         {
@@ -358,7 +392,7 @@
 
         public void ShowCards()
         {
-            Console.WriteLine("У вас в руке");
+            Console.WriteLine("В руке");
 
             for (int i = 0; i < _gameHand.Count; i++)
             {
@@ -373,6 +407,13 @@
             _gameHand.Clear();
         }
     }
+
+    class Cropier : Player
+    {
+
+    }
+
+
 
     class Deck
     {
