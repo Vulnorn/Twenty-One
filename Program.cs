@@ -6,7 +6,7 @@
         {
             List<Player> playerList = new List<Player>()
             {
-                new Cropier(),
+                new Player(),
                 new Player()
             };
 
@@ -79,7 +79,7 @@
 
                 if (PickWinner( isFinish))
                     continue;
-
+                
                 GamePlayer();
                 GameCroupier();
                 isFinish = true;
@@ -335,13 +335,6 @@
     {
         private List<Card> _gameHand = new List<Card>();
 
-        public int PointsWin { get; private set; }
-
-        public void TakePointsWin()
-        {
-
-        }
-
         public List<Card> GetCards()
         {
             return _gameHand.ToList();
@@ -369,13 +362,6 @@
             _gameHand.Clear();
         }
     }
-
-    class Cropier : Player
-    {
-
-    }
-
-
 
     class Deck
     {
