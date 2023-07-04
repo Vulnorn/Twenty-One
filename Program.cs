@@ -4,29 +4,33 @@
     {
         static void Main(string[] args)
         {
-            BlackJackGame blackJackGame = new BlackJackGame(17);
-
             List<Player> playerList = new List<Player>()
             {
                 new Cropier(),
                 new Player()
             };
 
-            blackJackGame.PlayBlackJack(playerList);
+            BlackJackGame blackJackGame = new BlackJackGame(playerList);
+
+            blackJackGame.Play();
         }
     }
-
-
 
     class BlackJackGame
     {
         private Deck _deck = new Deck();
         private Dictionary<string, int> _cardPoints;
+        private List<Player> _players;
+        private int[] _score;
+        private int[] _pointsCards;
 
-        public BlackJackGame(int minPointsCards)
+        public BlackJackGame(List<Player> players)
         {
-            MinPointsCards = minPointsCards;
+            MinPointsCards = 17;
             BlackJackNumber = 21;
+            _players = players;
+            _score = new int[players.Count()];
+            _pointsCards = new int[players.Count()];
 
             _cardPoints = new Dictionary<string, int>()
             {
@@ -48,31 +52,13 @@
 
         public int BlackJackNumber { get; private set; }
         public int MinPointsCards { get; private set; }
-        public int PointsCardsPlayer { get; private set; }
-        public int PointsCardsCroupier { get; private set; }
-        public int PointsWinPlayer { get; private set; }
-        public int PointsWinCroupier { get; private set; }
 
-        private int[] CreatelistPlayers(List<Player> players)
-        {
-            int[] pointsWin = new int[players.Count()];
-
-            for (int i = 0;i>pointsWin.Length;i++)
-            {
-                pointsWin[i] = 0;
-            }
-
-            return pointsWin;
-        }
-
-        public void PlayBlackJack(List<Player> players)
+        public void Play()
         {
             int numbersCardsInDeck = 0;
             int minNumbersCardsForGames = 10;
             bool isGame = true;
             bool isFinish;
-
-            int[] pointsWin = CreatelistPlayers(players);
 
             while (isGame)
             {
@@ -88,17 +74,17 @@
                 if (numbersCardsInDeck < minNumbersCardsForGames)
                     _deck.AddDeck();
 
-                HandOutFirstCards(players, pointsWin);
-                ShoyGameTabel(players);
+                HandOutFirstCards();
+                ShoyGameTabel();
 
-                if (PickWinner(player, isFinish))
+                if (PickWinner( isFinish))
                     continue;
 
-                GamePlayer(player);
-                GameCroupier(player);
+                GamePlayer();
+                GameCroupier();
                 isFinish = true;
 
-                if (PickWinner(player, isFinish))
+                if (PickWinner( isFinish))
                     continue;
             }
         }
@@ -123,14 +109,6 @@
 
             return points;
         }
-
-        //private void TransferCardCroupier()
-        //{
-        //    if (_deck.TryGetCard(out Card card))
-        //    {
-        //        _cards.Add(card);
-        //    }
-        //}
 
         private bool OutGame()
         {
@@ -169,98 +147,98 @@
             Console.ReadKey();
         }
 
-        private void ShoyGameTabel(List<Player> players, int[] pointsWins)
+        private void ShoyGameTabel()
         {
             string border = new string('_', 60);
 
             Console.Clear();
             Console.WriteLine();
             Console.WriteLine("    Добро пожаловать в игру Блек-Джек    ");
-            Console.WriteLine($"Счет в игре: Казино {pointsWins[0]} побед | Игрок {pointsWins[1]} побед");
+            Console.WriteLine($"Счет в игре: Казино {_score[0]} побед | Игрок {_score[1]} побед");
             Console.WriteLine(border);
 
-            PointsCardsCroupier = CalculatePoints(players[0].GetCards());
-            PointsCardsPlayer = CalculatePoints(players[1].GetCards());
+            _pointsCards[0] = CalculatePoints(_players[0].GetCards());
+            _pointsCards[1] = CalculatePoints(_players[1].GetCards());
 
             Console.WriteLine(border);
 
-            players[1].ShowCards();
+            _players[1].ShowCards();
 
-            Console.WriteLine($"\nУ игрока {PointsCardsPlayer} очков\n");
+            Console.WriteLine($"\nУ игрока {_pointsCards[1]} очков\n");
             Console.Write($"У крупье в руке: ");
 
-            players[0].ShowCards();
-            Console.Write(" ##");
+            _players[0].ShowCards();
 
             Console.WriteLine();
             Console.WriteLine(border);
             Console.WriteLine();
         }
 
+
         private void EarnPointsForWinPlayer()
         {
-            PointsWinPlayer++;
+            _score[1]++;
         }
 
         private void EarnPointsForWinCroupier()
         {
-            PointsWinCroupier++;
+            _score[0]++;
         }
 
-        private bool PickWinner(Player player, Cropier cropier, bool isFinish)
+        private bool PickWinner( bool isFinish)
         {
             bool isWin = false;
 
-            if (PointsCardsCroupier == BlackJackNumber && PointsCardsPlayer == BlackJackNumber)
+            if (_pointsCards[0] == BlackJackNumber && _pointsCards[1] == BlackJackNumber)
             {
                 ShowMassage("Ничья. Оба игрока собрали Блек-Джек. Поздравляем!");
-                player.ShowCards();
-                cropier.ShowCards();
+                _players[1].ShowCards();
+                _players[0].ShowCards();
                 isWin = true;
             }
-            else if (PointsCardsPlayer == BlackJackNumber)
+            else if (_pointsCards[1] == BlackJackNumber)
             {
                 ShowMassage("Игрок собрал Блек-Джек. Поздравляем, Вы победили!");
                 EarnPointsForWinPlayer();
                 isWin = true;
             }
-            else if (PointsCardsCroupier == BlackJackNumber)
+            else if (_pointsCards[0] == BlackJackNumber)
             {
                 ShowMassage("Крупье получил Блек-Джек. Вы проиграли эту партию.");
-                cropier.ShowCards();
+                _players[0].ShowCards();
                 EarnPointsForWinCroupier();
                 isWin = true;
             }
-            else if (PointsCardsPlayer > BlackJackNumber && PointsCardsCroupier > BlackJackNumber)
+            else if (_pointsCards[1] > BlackJackNumber && _pointsCards[0] > BlackJackNumber)
             {
                 ShowMassage("Ничья. Оба игрока собрали больше.");
                 isWin = true;
             }
-            else if (PointsCardsPlayer > BlackJackNumber && isFinish == true)
+            else if (_pointsCards[1] > BlackJackNumber && isFinish == true)
             {
                 ShowMassage("Крупье выиграл");
                 EarnPointsForWinCroupier();
                 isWin = true;
             }
-            else if (PointsCardsCroupier > BlackJackNumber && isFinish == true)
+            else if (_pointsCards[0] > BlackJackNumber && isFinish == true)
             {
                 ShowMassage("Игрок победил!");
                 EarnPointsForWinPlayer();
                 isWin = true;
             }
-            else if (PointsCardsPlayer < PointsCardsCroupier && isFinish == true)
+            else if (_pointsCards[1] < _pointsCards[0] && isFinish == true)
             {
                 ShowMassage("Крупье выиграл");
                 EarnPointsForWinCroupier();
                 isWin = true;
             }
-            else if (PointsCardsPlayer > PointsCardsCroupier && isFinish == true)
+            else if (_pointsCards[1] > _pointsCards[0] && isFinish == true)
             {
                 ShowMassage("Игрок победил!");
                 EarnPointsForWinPlayer();
                 isWin = true;
             }
-            else if (PointsCardsPlayer == PointsCardsCroupier && isFinish == true)
+            else if (_pointsCards[1] == _pointsCards[0] && isFinish == true)
             {
                 ShowMassage("Ничья!");
                 Console.ReadKey();
@@ -270,7 +248,7 @@
             return isWin;
         }
 
-        private void GamePlayer(Player player)
+        private void GamePlayer()
         {
             const string TakeCardMenu = "1";
             const string СheckMenu = "2";
@@ -280,7 +258,7 @@
 
             while (isGamePlayer)
             {
-                ShoyGameTabel(player);
+                ShoyGameTabel();
                 Console.WriteLine($"{TakeCardMenu} - Взять одну карту.");
                 Console.WriteLine($"{СheckMenu} - Чек.");
                 userInput = Console.ReadLine();
@@ -288,7 +266,7 @@
                 switch (userInput)
                 {
                     case TakeCardMenu:
-                        isGamePlayer = AddCard(player, isGamePlayer);
+                        isGamePlayer = AddCardPlayer(isGamePlayer);
                         break;
 
                     case СheckMenu:
@@ -302,31 +280,35 @@
             }
         }
 
-        private bool AddCard(Player player, bool isMovePlayer)
+        private bool AddCardPlayer(bool isGamePlayer)
         {
-            TransferCard(player);
-            PointsCardsPlayer = CalculatePoints(player.GetCards());
+            TransferCard(_players[1]);
+            _pointsCards[1] = CalculatePoints(_players[1].GetCards());
 
-            if (PointsCardsPlayer > BlackJackNumber)
+            if (_pointsCards[1] > BlackJackNumber)
             {
                 Console.WriteLine($"Сумма карт превысила {BlackJackNumber} ход передается Крупье.");
-                return isMovePlayer = false;
+                return isGamePlayer = false;
             }
-
-            return isMovePlayer = true;
-        }
-        private void GameCroupier(Player player, Cropier cropier)
-        {
-            ShoyGameTabel(player, cropier);
-
-            while (PointsCardsCroupier <= MinPointsCards)
+            else if (_pointsCards[1] == BlackJackNumber)
             {
-                TransferCard(cropier);
-                PointsCardsCroupier = CalculatePoints(cropier.GetCards());
+                return isGamePlayer = false;
             }
 
-            cropier.ShowCards();
-            Console.WriteLine($"\nУ Крупье {PointsCardsCroupier} очков.\n");
+            return isGamePlayer = true;
+        }
+        private void GameCroupier()
+        {
+            ShoyGameTabel();
+
+            while (_pointsCards[0] <= MinPointsCards)
+            {
+                TransferCard(_players[0]);
+                _pointsCards[0] = CalculatePoints(_players[0].GetCards());
+            }
+
+            _players[0].ShowCards();
+            Console.WriteLine($"\nУ Крупье {_pointsCards[0]} очков.\n");
         }
 
         private void ShowMassage(string massage)
@@ -335,39 +317,19 @@
             Console.ReadKey();
         }
 
-        private void HandOutFirstCards(List <Player> players, int[] pointsWin)
+        private void HandOutFirstCards()
         {
-            //PointsCardsPlayer = 0;
-            //player.ClearHand();
-            //TransferCard(player);
-            //TransferCard(player);
+            _pointsCards[1] = 0;
+            _pointsCards[0] = 0;
 
-            //cropier.ClearHand();
-            //PointsCardsCroupier = 0;
-            //TransferCard(cropier);
-            //TransferCard(cropier);
-
-            for (int i = 0;i<players.Count; i++)
+            for (int i = 0; i < _players.Count; i++)
             {
-                players[i].ClearHand();
-
+                _players[i].ClearHand();
+                TransferCard(_players[i]);
+                TransferCard(_players[i]);
             }
-        }
-
-        private void ShowCards()
-        {
-            Console.WriteLine("У Крупье в руке");
-
-            for (int i = 0; i < _cards.Count; i++)
-            {
-                _cards[i].ShowInfo();
-            }
-
-            Console.WriteLine();
         }
     }
-
-
 
     class Player
     {
