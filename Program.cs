@@ -55,7 +55,7 @@
 
         public void Play()
         {
-            int numbersCardsInDeck = 0;
+            int numbersCardsInDeck;
             int minNumbersCardsForGames = 10;
             bool isGame = true;
             bool isFinish;
@@ -69,22 +69,22 @@
                 }
 
                 isFinish = false;
-                numbersCardsInDeck = _deck.ShowNumbersCards(numbersCardsInDeck);
+                numbersCardsInDeck = _deck.GetNumbersCards();
 
                 if (numbersCardsInDeck < minNumbersCardsForGames)
-                    _deck.AddDeck();
+                    _deck.Create();
 
                 HandOutFirstCards();
-                ShoyGameTabel();
+                ShowGameTable();
 
-                if (PickWinner( isFinish))
+                if (PickWinner(isFinish))
                     continue;
-                
+
                 GamePlayer();
                 GameCroupier();
                 isFinish = true;
 
-                if (PickWinner( isFinish))
+                if (PickWinner(isFinish))
                     continue;
             }
         }
@@ -112,24 +112,24 @@
 
         private bool OutGame()
         {
-            const string GameMenu = "1";
-            const string OutGameMenu = "2";
+            const string StartGame = "1";
+            const string ExitGame = "2";
 
             bool isOut = false;
             string userInput;
 
             Console.Clear();
-            Console.WriteLine($"{GameMenu} - Играть.");
-            Console.WriteLine($"{OutGameMenu} - Выйти из игры.");
+            Console.WriteLine($"{StartGame} - Начать игру.");
+            Console.WriteLine($"{ExitGame} - Выйти из игры.");
             userInput = Console.ReadLine();
 
             switch (userInput)
             {
-                case GameMenu:
+                case StartGame:
                     isOut = false;
                     break;
 
-                case OutGameMenu:
+                case ExitGame:
                     isOut = true;
                     break;
 
@@ -147,7 +147,7 @@
             Console.ReadKey();
         }
 
-        private void ShoyGameTabel()
+        private void ShowGameTable()
         {
             string border = new string('_', 60);
 
@@ -165,7 +165,7 @@
             _players[1].ShowCards();
 
             Console.WriteLine($"\nУ игрока {_pointsCards[1]} очков\n");
-            Console.Write($"У крупье в руке: ");
+            Console.WriteLine($"У крупье ");
 
             _players[0].ShowCards();
 
@@ -185,7 +185,7 @@
             _score[0]++;
         }
 
-        private bool PickWinner( bool isFinish)
+        private bool PickWinner(bool isFinish)
         {
             bool isWin = false;
 
@@ -258,7 +258,7 @@
 
             while (isGamePlayer)
             {
-                ShoyGameTabel();
+                ShowGameTable();
                 Console.WriteLine($"{TakeCardMenu} - Взять одну карту.");
                 Console.WriteLine($"{СheckMenu} - Чек.");
                 userInput = Console.ReadLine();
@@ -299,7 +299,7 @@
         }
         private void GameCroupier()
         {
-            ShoyGameTabel();
+            ShowGameTable();
 
             while (_pointsCards[0] <= MinPointsCards)
             {
@@ -333,25 +333,25 @@
 
     class Player
     {
-        private List<Card> _gameHand = new List<Card>();
+        private List<Card> _cards = new List<Card>();
 
         public List<Card> GetCards()
         {
-            return _gameHand.ToList();
+            return _cards.ToList();
         }
 
         public void TakeCard(Card card)
         {
-            _gameHand.Add(card);
+            _cards.Add(card);
         }
 
         public void ShowCards()
         {
             Console.WriteLine("В руке");
 
-            for (int i = 0; i < _gameHand.Count; i++)
+            for (int i = 0; i < _cards.Count; i++)
             {
-                _gameHand[i].ShowInfo();
+                _cards[i].ShowInfo();
             }
 
             Console.WriteLine();
@@ -359,7 +359,7 @@
 
         public void ClearHand()
         {
-            _gameHand.Clear();
+            _cards.Clear();
         }
     }
 
@@ -370,32 +370,24 @@
 
         public Deck()
         {
-            AddDeck();
+            Create();
         }
 
-        public void AddDeck()
+        public void Create()
         {
             List<Card> cards = CreateCards();
-            cards = ShuffleCards(cards);
-            AddCardsInDeck(cards);
+            ShuffleCards(cards);
+            FoldCards(cards);
         }
 
         public bool TryGetCard(out Card card)
         {
-            card = null;
-
-            if (_cards.Count > 0)
-            {
-                card = _cards.Pop();
-                return true;
-            }
-
-            return false;
+            return _cards.TryPop(out card);
         }
 
-        public int ShowNumbersCards(int numbersCards)
+        public int GetNumbersCards()
         {
-            return numbersCards = _cards.Count;
+            return _cards.Count;
         }
 
         private List<Card> CreateCards()
@@ -415,7 +407,7 @@
             return cards;
         }
 
-        private List<Card> ShuffleCards(List<Card> cards)
+        private void ShuffleCards(List<Card> cards)
         {
 
             for (int i = 0; i < cards.Count; i++)
@@ -431,11 +423,9 @@
                 cards[randomIndex] = cards[i];
                 cards[i] = card;
             }
-
-            return cards;
         }
 
-        private void AddCardsInDeck(List<Card> cards)
+        private void FoldCards(List<Card> cards)
         {
             foreach (Card card in cards)
             {
