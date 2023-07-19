@@ -62,7 +62,7 @@
 
             while (isGame)
             {
-                if (OutGame())
+                if (TryOutGame())
                 {
                     isGame = false;
                     continue;
@@ -72,7 +72,7 @@
                 numbersCardsInDeck = _deck.GetNumbersCards();
 
                 if (numbersCardsInDeck < minNumbersCardsForGames)
-                    _deck.Create();
+                    _deck.CreateNew();
 
                 HandOutFirstCards();
                 ShowGameTable();
@@ -80,8 +80,8 @@
                 if (PickWinner(isFinish))
                     continue;
 
-                GamePlayer();
-                GameCroupier();
+                TurnPlayer();
+                TurnCroupier();
                 isFinish = true;
 
                 if (PickWinner(isFinish))
@@ -110,7 +110,7 @@
             return points;
         }
 
-        private bool OutGame()
+        private bool TryOutGame()
         {
             const string StartGame = "1";
             const string ExitGame = "2";
@@ -173,7 +173,6 @@
             Console.WriteLine(border);
             Console.WriteLine();
         }
-
 
         private void EarnPointsForWinPlayer()
         {
@@ -248,7 +247,7 @@
             return isWin;
         }
 
-        private void GamePlayer()
+        private void TurnPlayer()
         {
             const string TakeCardMenu = "1";
             const string СheckMenu = "2";
@@ -266,7 +265,7 @@
                 switch (userInput)
                 {
                     case TakeCardMenu:
-                        isGamePlayer = AddCardPlayer(isGamePlayer);
+                        isGamePlayer = AddCardPlayer();
                         break;
 
                     case СheckMenu:
@@ -280,7 +279,7 @@
             }
         }
 
-        private bool AddCardPlayer(bool isGamePlayer)
+        private bool AddCardPlayer()
         {
             TransferCard(_players[1]);
             _pointsCards[1] = CalculatePoints(_players[1].GetCards());
@@ -288,16 +287,17 @@
             if (_pointsCards[1] > BlackJackNumber)
             {
                 Console.WriteLine($"Сумма карт превысила {BlackJackNumber} ход передается Крупье.");
-                return isGamePlayer = false;
+                return false;
             }
             else if (_pointsCards[1] == BlackJackNumber)
             {
-                return isGamePlayer = false;
+                return false;
             }
 
-            return isGamePlayer = true;
+            return true;
         }
-        private void GameCroupier()
+
+        private void TurnCroupier()
         {
             ShowGameTable();
 
@@ -370,10 +370,10 @@
 
         public Deck()
         {
-            Create();
+            CreateNew();
         }
 
-        public void Create()
+        public void CreateNew()
         {
             List<Card> cards = CreateCards();
             ShuffleCards(cards);
